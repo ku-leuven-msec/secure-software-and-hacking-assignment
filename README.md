@@ -8,6 +8,7 @@ Each group gets a Gitlab repo to collaborate and to submit their final work.
 During lab 2, you have to give us a short progress update, and at the end of the semester an oral presentation of your work.
 
 If you have questions, you can find Alicia Andries or Ruben Mechelinck in office G216.
+Make sure you read this assignment thoroughly **before** asking questions.
 
 **Important requirement**: you need an x86-64 machine for this project. 
 We can host a limited number of VMs for groups in which no member has an x86-64 machine.
@@ -97,26 +98,27 @@ Afterwards, we will ask you some questions.
 The table below shows the scenarios for which you have to build different exploits. 
 They are ordered approximately by level of difficulty, but you do not have to follow this order. 
 In contrast to the lab sessions about finding bugs and writing exploits, in these scenarios, you will stumble upon additional obstacles that you need to overcome with some creativity. 
-You can build an exploit for each scenario with one or two exploitable bugs at its core.
+You can build an exploit for each scenario with only one or two exploitable bugs at its core.
 
-| no. | `server_data`        | stack canary | DEP¹ | ASLR² | comments |
-| :-: | :------------------: | :----------: | :--: | :---: | -------- |
-| 1   | accessible           | no           | no   | no    | you can copy your keylogger binary directly into `server_data` and read its output there as well |
-| 2   | accessible           | no           | yes  | no    | no additional bugs required compared to scenario 1 |
-| 3   | not accessible       | no           | no   | no    | like scenario 1 but with 2 new challenges: 1. how to get your executable keylogger binary on the remote machine, 2. how to get the output back to the attacker |
-| 4   | accessible           | no           | yes  | yes   | this requires a successful exploit for scenario 2 first |
-| 5   | accessible           | yes          | no   | no    | do not try to change a return address, look for other indirect (forward) edges |
-| 6   | not accessible       | yes          | yes  | yes   | have a look at the ELF .dynamic section and think about function interposition |
+| no. | `server_data` access¹ | stack canary | DEP² | ASLR³ | comments |
+| :-: | :-------------------: | :----------: | :--: | :---: | -------- |
+| 1   | accessible            | no           | no   | no    | you can copy your keylogger binary directly into `server_data` and read its output there as well |
+| 2   | accessible            | no           | yes  | no    | no additional bugs required compared to scenario 1 |
+| 3   | not accessible        | no           | no   | no    | like scenario 1 but with 2 new challenges: 1. how to get your executable keylogger binary on the remote machine, 2. how to get the output back to the attacker |
+| 4   | accessible            | no           | yes  | yes   | this requires a successful exploit for scenario 2 first |
+| 5   | accessible            | yes          | no   | no    | do not try to change a return address, look for other indirect (forward) edges |
+| 6   | not accessible        | yes          | yes  | yes   | have a look at the ELF .dynamic section and think about function interposition |
 
-¹ Data Execution Prevention (aka W⊕X)\
-² Address Space Layout Randomization
+¹ when accessible, you are allowed to read and write in the directory without going through the server application.\
+² Data Execution Prevention (aka W⊕X)\
+³ Address Space Layout Randomization (with PIE)
 
 
 ## Getting Started
 ### Repo Structure
 This repo's root directory contains:
 - the `keylogger` directory which contains the minimal working keylogger implementation.
-- the `examples` directory with the object code of the `log_message` function (`log_message.o`) you have to reverse engineer, together with an example for the `get_file_name` function (`get_file_name.o`, `get_file_name.dump`, `get_file_name.pseudo`, `get_file_name.stack`).
+- the `examples` directory with the object code of the `log_message` function (`log_message.o`) you have to reverse engineer, together with an example for the `get_file_name` function.
 - the `server` directory with:
     - the `launch_scenario` program. 
     This program will set up the scenario parameters, start the server and restart it whenever it crashes (more info below).
@@ -126,9 +128,9 @@ This repo's root directory contains:
     For some scenarios, however, it may contain one or two small tweaks, so be sure to **check your assumptions** whenever you start on a new scenario! 
     For scenario 4 and 5, you also get a server binary compiled with address sanitizer (ASAN).
     - `server.h` is the header file of the server application. 
-    This contains only the function declarations together with some small comments.
+    This contains all declarations with some small comments.
     - the `server_data` directory. 
-    This contains all data files used by the server application: `home.html` and `data.txt`. 
+    This contains all data files used by the server application: `home.html`, `data.txt`, and the stats program. 
     You can assume these files are always present when the server launches.
 
 
@@ -154,7 +156,7 @@ Inside the VM, run
 $ sudo apt-get update
 $ sudo apt-get upgrade
 $ sudo apt-get dist-upgrade
-$ git clone ???
+$ git clone https://github.com/ku-leuven-msec/secure-software-and-hacking-assignment
 ```
 
 **Note**: if you do want to use two separate VMs:
@@ -162,7 +164,7 @@ $ git clone ???
 Use `VBoxManage internalcommands sethduuid <filename>.vdi`. 
 - use a different host port in the SSH port forwarding of the second VM.
 - when using the *NAT* network adapter, two VMs can communicate with each other **through the host**, using the host IP address and the port assigned to the receiving VM.
-- Note: the *Bridged* network adapter **will not work on campus** since the campus network does not give more than one IP address per network adapter.
+- Note: the *Bridged* network adapter **will not work on campus** because the campus network does not give more than one IP address per network adapter.
 
 ### The Server Application
 **Read this section thoroughly!** You need to know how the server operates before you can exploit it.
@@ -185,28 +187,27 @@ In other words, do not waste time trying to get the plain password.
 
 When reading the request, the server first reads the whole header (**ending with "\r\n\r\n"**), parses it, extracts the "Content-Length" field, and then reads the whole body based on the content length. 
 If your request does not contain the header ending, or if it has a "Content-Length" field larger than its body, the server will wait for the client to send more data until the client closes the connection. 
-The "Content-Length" field is optional for GET requests.
+The "Content-Length" field is optional for GET requests. Be sure to experiment with this blocking behaviour.
 
-#### Lauching
-You can use the `launch_scenario` program to automatically set up the scenario. 
-It sets the required system parameters, restores the files in `server_data` to their initial contents, removes the log file, and starts the server application.
+#### Launching
+Use the `launch_scenario` program to automatically set up the scenario. For example:
 ```shell
-$ sudo ./launch_scenario <scenario_id>
+$ sudo ./launch_scenario 1
+$ sudo ./launch_scenario 4_asan
 ```
+It sets the required system parameters, restores the files in `server_data` to their initial contents, removes the log file, and starts the server application.
+
 When started this way, the server application gets restarted automatically whenever it terminates with an error. 
 This is part of the expected behaviour of the remote machine that you can use in your exploits. 
 On the demo machine, the server is also started using the `launch_scenario` program.
 
 You may assume the running server instance you attack is not widely used by other actors, and runs idle most of the time. 
-The server prints its own process ID at startup.
 
 #### Info
 The vulnerable HTTP server application is written in C, runs with root privileges on a Linux host, and accepts connections on port 8080. 
 **Each connection is handled by a new thread**, which has its own stack at a different memory address.
-The server binaries for all scenarios are compiled with clang 11.0.1, with compiler flags that include `-O1 -fno-omit-frame-pointer`, into ELF binaries with 64-bit Position Independent Code (PIC) without debug symbols.
-
-The following functions do not include (intentional) bugs: 
-- TODO
+The server binaries for all scenarios are compiled with clang 11.0.1, with compiler flags that include `-O1 -fno-omit-frame-pointer`, into 64-bit ELF binaries without debug symbols.
+See `server.h` for a list of functions without (intentional) bugs.
 
 ## Useful Links & Info
 - Documentation about Linux tools and libc functions: https://www.man7.org/linux/man-pages/ (or use the `man <tool-or-function-name>` command)
@@ -214,9 +215,11 @@ The following functions do not include (intentional) bugs:
 - x86-64 system call numbers and arguments: http://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/
 - (7 bit) ASCII table: https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/ASCII-Table-wide.svg/1280px-ASCII-Table-wide.svg.png
 - Online (dis)assembler with hexadecimal representation: https://defuse.ca/online-x86-assembler.htm
+- https://gcc.gnu.org/onlinedocs/gcc/Return-Address.html
+- https://www.man7.org/conf/lca2006/shared_libraries/slide19a.html
+
 
 Some info about the `execve` system call:
-- the executed file must either have executable permissions or be a script.
 - the argv and envp each point to an **array** of char **pointers**. 
 Those char pointers point to (null-terminated) **strings**. 
 Do not try to use these pointers to point to any type other than strings!
@@ -227,6 +230,9 @@ On x86:
 However, data on the stack is read and written from lower to higher addresses.
 - the stack pointer (`rsp`) always points to the next free stack slot.
 - data types that consist of multiple bytes are stored in little-endian format in memory.
+
+Others:
+    - the heap is not executable by default on modern Linux versions, even with DEP turned off.
 
 
 ## Useful Tools
@@ -267,7 +273,7 @@ $ nasm /path/to/input_file -o /path/to/output_file
 
 - Disassemble binary code to assembly code
 ```shell
-$ objdump -d -M intel /path/to/input_file > /path/to/output_file]
+$ objdump -d -M intel /path/to/input_file > /path/to/output_file
 ```
 
 - To convert bytes (for example, bytes of an ASCII string) from a file or standard input to hexadecimal form:
@@ -295,10 +301,9 @@ int main() {
 
 - use `readelf` to inspect ELF specific metadata like headers, tables, etc.
 
-- To debug the server with GDB
+- To debug the server started with `launch_scenario` with GDB. The server prints its process ID at startup.
 ```shell
-$ gdb -tui server_sc<sc_id> #launch the server with GDB
-$ gdb -tui -p <pid> #to attach to an already running server intance (for example, when launched with `launch_scenario`)
+$ sudo gdb -tui -p <pid>
 ```
 **Note**: do not start `launch_scenario` with GDB.
 

