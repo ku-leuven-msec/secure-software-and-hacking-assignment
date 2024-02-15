@@ -22,7 +22,7 @@ You can only interact over the network with the victim HTTP server itself.
 - the **attacker machine**, which is the machine on which you perform your offline program analyses and build and test your exploits.
 Here, you have full control over the execution environment and can inspect system resources.
 You are free to use any analysis on the victim binary image.
-For example, static analysis, i.e., analysis without running the program (e.g., disassembling, decompiling), or dynamic analysis, i.e., analysis on a program instance running on the attacker machine (e.g., debugging, fuzzing, concolic execution).
+For example, static analysis, i.e., analysis without running the program (e.g., disassembling, decompiling), or dynamic analysis, i.e., analysis on a program instance running on the attacker machine (e.g., debugging, tracing, fuzzing, concolic execution).
 For the latter, an attacker will try to recreate the remote machine's environment as closely as possible (OS and kernel version, libc version, etc.) to build exploits that are reproducible on the remote machine.
 Note: in a real attack setting, an attacker often doesn't have the (exact same) binary image and doesn't know the (exact) execution environment.
 When the final exploit is ready, the attacker launches it to attack the victim server on the remote machine.
