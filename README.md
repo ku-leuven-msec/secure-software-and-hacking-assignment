@@ -13,13 +13,14 @@ Make sure you read this assignment thoroughly **before** asking questions.
 **Important requirement**: you need an x86-64 machine for this project.
 We can host a limited number of VMs for groups in which no member has an x86-64 machine.
 
+
 ## Introduction: Architectural Overview
 There are two different machines in play:
-- The **remote machine** runs the vulnerable server application.
+* The **remote machine** runs the vulnerable server application.
 This is the machine you (i.e., the attacker) must attack and install the keylogger on.
 You cannot log into this machine or inspect system resources (e.g., memory, files, or process information).
 You can only interact over the network with the victim HTTP server itself.
-The **attacker machine** is the one on which you perform your offline program analyses and build and test your exploits.
+* The **attacker machine** is the one on which you perform your offline program analyses and build and test your exploits.
 Here, you have complete control over the execution environment and can inspect system resources.
 You can freely use any analysis tools to examine the victim binary image.
 You could, for example, run static analysis tools such as disassemblers/decompilers or dynamic analysis tools such as debuggers, fuzzers, and tracers.
@@ -117,18 +118,18 @@ You can build an exploit for each scenario with only one or two exploitable bugs
 ## Getting Started
 ### Repo Structure
 This repo's root directory contains:
-* the `keylogger` directory with a minimal working keylogger implementation.
-* the `examples` directory with a disassembly of the `log_message` function you should reverse engineer, along with an example implementation of the `build_200_response_read` function.
-* the `server` directory with:
-    * the `launch_scenario` program.
+* The `keylogger` directory with a minimal working keylogger implementation.
+* The `examples` directory with a disassembly of the `log_message` function you should reverse engineer, along with an example implementation of the `build_200_response_read` function.
+* The `server` directory with:
+    * The `launch_scenario` program.
     This program will set up the scenario parameters, start the server, and restart it whenever it crashes (more info below).
-    * the server binaries, one for each scenario: `server_sc<scenario_id>`.
+    * The server binaries, one for each scenario: `server_sc<scenario_id>`.
     These are the binaries you, the attacker, have access to for analysis on the attacker machine.
     The source code for the different scenarios is **almost** identical.
     For some scenarios, however, it may contain one or two minor tweaks, so be sure to **re-validate your assumptions** whenever you start on a new scenario!
     For scenarios 4 and 5, you also get a server binary compiled with address sanitizer (ASAN).
     * `server.h` is the header file of the server application. This file contains all declarations with some minor comments.
-    * the `server_data` directory which contains all data files used by the server application: `home.html`, `data.txt`, and the stats program.
+    * The `server_data` directory which contains all data files used by the server application: `home.html`, `data.txt`, and the stats program.
     You can assume these files are always present when the server launches.
 
 ### Project Setup
@@ -157,20 +158,20 @@ $ git clone https://github.com/ku-leuven-msec/secure-software-and-hacking-assign
 ```
 
 **Note**: if you do want to use two separate VMs:
-- on VirtualBox, you will have to regenerate the UUID of the second VDI file.
+* On VirtualBox, you will have to regenerate the UUID of the second VDI file.
 Use `VBoxManage internalcommands sethduuid <filename>.vdi`.
-- use a different host port in the SSH port forwarding of the second VM.
-- when using the *NAT* network adapter, two VMs can communicate with each other **through the host**, using the host IP address and the port assigned to the receiving VM.
-- Note: the *Bridged* network adapter **will not work on campus** because the campus network does not give more than one IP address per network adapter.
+* Use a different host port in the SSH port forwarding of the second VM.
+* When using the *NAT* network adapter, two VMs can communicate with each other **through the host**, using the host IP address and the port assigned to the receiving VM.
+* Note: the *Bridged* network adapter **will not work on campus** because the campus network does not give more than one IP address per network adapter.
 
 ### The Server Application
 **Read this section thoroughly!** You need to know how the server operates before you can exploit it.
 #### Operations
 The server accepts HTTP GET, POST, and PUT requests that interact with files in the `server_data` directory:
-- GET sends the specified file to the client.
-- POST appends the HTTP body to the specified file.
+* GET sends the specified file to the client.
+* POST appends the HTTP body to the specified file.
 It returns 404 if the specified file does not exist.
-- PUT creates the specified file and fills it with the HTTP body.
+* PUT creates the specified file and fills it with the HTTP body.
 The server overwrites the file if it already exists.
 
 All file operations are restricted to the `server_data` directory.
@@ -205,39 +206,39 @@ We compiled the server into x86_64 ELF binaries without debug symbols for all sc
 We used clang 11.0.1 as the compiler and compiled with optimization flags that include `-O1 -fno-omit-frame-pointer`.
 The `server.h` file contains a list of functions without (intentional) bugs.
 
-## Useful Links & Info
-- Documentation about Linux tools and libc functions: https://www.man7.org/linux/man-pages/ (or use the `man <tool-or-function-name>` command)
-- x86 opcode documentation: https://www.felixcloutier.com/x86/
-- x86-64 system call numbers and arguments: http://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/
-- (7 bit) ASCII table: https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/ASCII-Table-wide.svg/1280px-ASCII-Table-wide.svg.png
-- Online (dis)assembler with hexadecimal representation: https://defuse.ca/online-x86-assembler.htm
-- https://gcc.gnu.org/onlinedocs/gcc/Return-Address.html
-- https://www.man7.org/conf/lca2006/shared_libraries/slide19a.html
 
+## Useful Links & Info
+* Documentation about Linux tools and libc functions: https://www.man7.org/linux/man-pages/ (or use the `man <tool-or-function-name>` command)
+* x86 opcode documentation: https://www.felixcloutier.com/x86/
+* x86-64 system call numbers and arguments: http://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/
+* (7 bit) ASCII table: https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/ASCII-Table-wide.svg/1280px-ASCII-Table-wide.svg.png
+* Online (dis)assembler with hexadecimal representation: https://defuse.ca/online-x86-assembler.htm
+* https://gcc.gnu.org/onlinedocs/gcc/Return-Address.html
+* https://www.man7.org/conf/lca2006/shared_libraries/slide19a.html
 
 Some info about the `execve` system call:
-- the argv and envp each point to an **array** of char **pointers**.
+* The argv and envp each point to an **array** of char **pointers**.
 Those char pointers point to (null-terminated) **strings**.
 Do not try to use these pointers to point to any type other than strings!
-- the argv and envp arrays are both terminated with a NULL pointer (= 8 bytes!).
+* The argv and envp arrays are both terminated with a NULL pointer (= 8 bytes!).
 
 On x86:
-- the stack grows from higher to lower addresses (with `push` and `pop`).
+* The stack grows from higher to lower addresses (with `push` and `pop`).
 However, data on the stack is read and written from lower to higher addresses.
-- the stack pointer (`rsp`) always points to the last pushed item.
-- data types that consist of multiple bytes are stored in little-endian format in memory.
+* The stack pointer (`rsp`) always points to the last pushed item.
+* Data types that consist of multiple bytes are stored in little-endian format in memory.
 
 Others:
-- the heap is not executable by default on modern Linux versions, even with DEP turned off.
+* The heap is not executable by default on modern Linux versions, even with DEP turned off.
 
 
 ## Useful Tools
-- Send HTTP request using `curl`
+* Send HTTP request using `curl`
 ```shell
 $ curl --request POST '127.0.0.1:8080/data.txt' --header 'Content-Type: text/plain' --header 'Authorization: Basic dXNlcjpwYXNz' --data 'some data'
 ```
 
-- With `curl`, you do not have fine control over how exactly the HTTP request will look because `curl` adds extra information in the HTTP header.
+* With `curl`, you do not have fine control over how exactly the HTTP request will look because `curl` adds extra information in the HTTP header.
 If you need fine control over the request, use netcat:
 ```shell
 $ nc localhost 8080 < request.http
@@ -257,34 +258,34 @@ Alternatively, without using a file:
 $ echo -n -e "GET /data.txt HTTP/1.1\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nsome data" | nc localhost 8080
 ```
 
-- To get the exact file length in bytes:
+* To get the exact file length in bytes:
 ```shell
 $ wc -c < path/to/file
 ```
 
-- Assemble assembly code to binary code
+* Assemble assembly code to binary code
 ```shell
 $ nasm /path/to/input_file -o /path/to/output_file
 ```
 
-- Disassemble binary code to assembly code
+* Disassemble binary code to assembly code
 ```shell
 $ objdump -d -M intel /path/to/input_file > /path/to/output_file
 ```
 
-- To convert bytes (for example, bytes of an ASCII string) from a file or standard input to hexadecimal form:
+* To convert bytes (for example, bytes of an ASCII string) from a file or standard input to hexadecimal form:
 ```shell
 $ xxd /path/to/file                #formated output
 $ xxd -p /path/to/file             #raw
 $ xxd -p -r /path/to/file          #reverse: hex -> bytes
 $ xxd -p /path/to/file | xxd -p -r #bytes -> hex -> bytes
 ```
-- Append backslash escape characters to a file ("\x60" = 0x60):
+* Append backslash escape characters to a file ("\x60" = 0x60):
 ```shell
 $ echo -n -e "\x60\xf1\n\t\x00\x7f" >> path/to/file
 ```
 
-- When you need the size of a type, and the documentation does not specify this, you can get it programmatically using a simple C program, for example for the `sockaddr_in` struct:
+* When you need the size of a type, and the documentation does not specify this, you can get it programmatically using a simple C program. For example, for the `sockaddr_in` struct:
 ```C
 #include <stdio.h>
 #include <netinet/in.h>
@@ -295,15 +296,15 @@ int main() {
 }
 ```
 
-- use `readelf` to inspect ELF specific metadata like headers, tables, etc.
+* Use `readelf` to inspect ELF specific metadata like headers, tables, etc.
 
-- To debug the server started with `launch_scenario` with GDB. The server prints its process ID at startup.
+* To debug the server started with `launch_scenario` with GDB. The server prints its process ID at startup.
 ```shell
 $ sudo gdb -tui -p <pid>
 ```
 **Note**: do not start `launch_scenario` with GDB.
 
-- Some useful options in `~/.gdbinit`
+* Some useful options in `~/.gdbinit`
 ```
 set disassembly-flavor intel
 ```
