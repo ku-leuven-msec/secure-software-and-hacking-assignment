@@ -57,12 +57,13 @@ Keep an eye open for any bug you discover here (hint).
 We give you an example of the **`build_200_reponse_read`** function.
 You should be able to do this assignment after the first lab session.
 
-During lab 2, every group privately gives us a concise progress update where you show us:
+During lab 3 (15 March), every group privately gives us a concise progress update where you show us:
 * Your results of the above exercise.
 * Any other progress you made. This could include:
     * An overview of the discovered bugs or irregularities and how you found them.
     * A description of your initial attempts to build exploits.
 
+If you cannot be present during this lab session, please contact Ruben and Alicia to arrange a different time slot.
 Your progress update will contribute to your overall grade.
 At the end of the lab session, we will guide you through building one exploit for scenario 1.
 

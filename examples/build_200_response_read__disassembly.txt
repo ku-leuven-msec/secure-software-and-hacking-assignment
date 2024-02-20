@@ -73,7 +73,7 @@ Disassembly of section .text:
   40305b: mov    edi,r13d                   # 1st arg: the file descriptor for the opened file
   40305e: mov    rdx,rbx                    # 3rd arg: the remaining buffer size
   403061: call   402100 <read@plt>          # call
-  403066:	     	cmp    rax,0xffffffffffffffff # compare return value with -1, set ZF accordingly
+  403066:	cmp    rax,0xffffffffffffffff     # compare return value with -1, set ZF accordingly
   40306a: je     L2                         # jump to L2 if `read` returned -1
   40306c: add    QWORD PTR [r14],rax        # else: add the resulting length to the memory pointed to by `arg:response_buf_len`
   40306f: jmp    L3                         # jump to L3
