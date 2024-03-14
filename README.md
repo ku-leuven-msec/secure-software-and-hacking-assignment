@@ -111,7 +111,7 @@ You can build an exploit for each scenario with only one or two exploitable bugs
 | 5   | accessible            | yes          | no   | no    | do not try to change a return address, look for other indirect (forward) edges |
 | 6   | not accessible        | yes          | yes  | yes   | have a look at the ELF .dynamic section and think about function interposition |
 
-¹ when accessible, you can read and write in the directory without going through the server application.\
+¹ When accessible, you can copy the keylogger binary to the directory and read the existing files it contains, without going through the server application. You are not allowed to change or overwrite any existing files. You still need to create an exploit for the server application to launch the keylogger.\
 ² Data Execution Prevention (aka W⊕X)\
 ³ Address Space Layout Randomization (with PIE)
 
