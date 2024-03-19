@@ -14,7 +14,7 @@ Contents of section .rodata:
  404490 73206973 20726561 640a0048 5454502f  s is read..HTTP/
 ...
 
-# I divided the disassembly per function call to bring some structure. The control flow it relatively simple.
+# I divided the disassembly per function call to bring some structure. The control flow is relatively simple.
 Disassembly of section .text:
 
 0000000000402fb0 <build_200_response_read>: # `void build_200_response_read(struct file_info* file_info, char* response_buf, size_t* response_buf_len)`
