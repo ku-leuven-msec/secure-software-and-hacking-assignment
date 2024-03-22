@@ -101,6 +101,8 @@ The table below shows the scenarios for which you must build different exploits.
 They are ordered approximately by difficulty level, but you are not obligated to follow this order.
 In contrast to the lab sessions about finding bugs and writing exploits, in these scenarios, you will stumble upon additional obstacles that you need to overcome with some creativity.
 You can build an exploit for each scenario with only one or two exploitable bugs at its core.
+Your exploit is successful when the keylogger is executing and the attacker can read its output. 
+You do not have to preserve the functionality of the server application after a successful attack.
 
 | no. | `server_data` access¹ | stack canary | DEP² | ASLR³ | comments |
 | :-: | :-------------------: | :----------: | :--: | :---: | -------- |
