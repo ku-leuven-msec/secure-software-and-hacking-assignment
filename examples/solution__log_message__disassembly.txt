@@ -1,0 +1,110 @@
+# objdump -ds --no-show-raw-insn -M intel --section=.text  --section=.rodata --disassemble=log_message ./server_sc1
+
+./server_sc1:     file format elf64-x86-64
+
+Contents of section .rodata:
+...
+ 4042f0 74732072 65616400 3d3d2052 65717565  ts read.== Reque
+ 404300 73742066 726f6d20 252d3135 73206174  st from %-15s at
+ 404310 20666420 252d3130 640a2573 002e2e2f   fd %-10d.%s.../
+ 404320 73657276 65722e6c 6f670025 730a0a00  server.log.%s...
+ 404330 68746d00 74657874 2f68746d 6c007478  htm.text/html.tx
+...
+ 404510 6100736f 636b6574 20637265 6174696f  a.socket creatio
+...
+
+# I divided the disassembly per function call to bring some structure. The control flow is relatively simple.
+Disassembly of section .text:
+
+0000000000402920 <log_message>: # `int log_message(const char* message, ssize_t message_len, int* client_fd)`
+# == prologue & preparation ==
+  402920:	push   rbp                        # push the caller's base pointer
+  402921:	mov    rbp,rsp                    # set the new base pointer
+  402924:	push   r15                        # store all used callee saved regs on the stack (r12, r14, r15, rbx)
+  402926:	push   r14
+  402928:	push   r12
+  40292a:	push   rbx
+  40292b:	sub    rsp,0x430                  # allocate space for all stack variables: 0x430 = 1072 bytes
+  402932:	mov    rbx,rdx                    # copy `arg:client_fd` to rbx for future access
+  402935:	mov    r14,rdi                    # copy `arg:message` to r14 for future access
+# == call to `int getsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);` ==  
+  402938:	mov    DWORD PTR [rbp-0x24],0x10  # store the value for the 3rd arg in a stack slot
+  40293f:	mov    edi,DWORD PTR [rdx]        # 1st arg: the client file descriptor (dereferences the `arg:client_fd` pointer)
+  402941:	lea    rsi,[rbp-0x50]             # 2nd arg: a pointer to a stack slot for the (output) `addr` arg
+  402945:	lea    rdx,[rbp-0x24]             # 3rd arg: a pointer to a stack slot with the `addrlen` arg (= 0x10)
+  402949:	call   402280 <getsockname@plt>   # call
+  40294e:	mov    r15d,0xffffffff            # r15d will hold this function's return value, set it to -1
+  402954:	test   eax,eax                    # set ZF
+  402956:	jne    L1                         # jump to L1 if `getsockname` did not return 0
+# == call to`const char *inet_ntop(int af, const void *src, char *dst, socklen_t size)` == 
+  40295c:	lea    rsi,[rbp-0x4c]             # 2nd arg: a pointer to the `sin_addr` field inside the `addr` arg of the previous function call
+  402960:	lea    rdx,[rbp-0x40]             # 3rd arg: a pointer to a stack slot for the (output) `dst` arg
+  402964:	mov    edi,0x2                    # 1st arg: 2 (= AF_INET)
+  402969:	mov    ecx,0x10                   # 4th arg: 0x10 = 16
+  40296e:	call   402430 <inet_ntop@plt>     # call
+  402973:	test   rax,rax                    # set ZF
+  402976:	je     L2                         # jump to L2 if `inet_ntop` returned 0
+# == call to `void *memset(void *s, int c, size_t n)` ==
+  40297c:	lea    r12,[rbp-0x450]
+  402983:	xor    r15d,r15d                  # set the function's return value to 0
+  402986:	mov    edx,0x400                  # 3rd arg: 0x400 = 1024
+  40298b:	mov    rdi,r12                    # 1st: a pointer to a stack slot for the `s` arg
+  40298e:	xor    esi,esi                    # 2nd arg: 0
+  402990:	call   402080 <memset@plt>        # call
+# == call to `int sprintf(char *s, const char *format, ...)` ==
+  402995:	mov    ecx,DWORD PTR [rbx]        # 4th arg: the client file descriptor (dereferences the `arg:client_fd` pointer)
+  402997:	lea    rdx,[rbp-0x40]             # 3rd arg: a pointer to the `dst` arg of the call to `inet_ntop`
+  40299b:	mov    esi,0x4042f8               # 2nd arg: a pointer to the `format` string arg in the .rodata section: "== Request from %-15s at fd %-10d\n%s"
+  4029a0:	mov    rdi,r12                    # 1st arg: a pointer to a stack slot for the `s` arg
+  4029a3:	mov    r8,r14                     # 5th arg: `arg:message`
+  4029a6:	xor    eax,eax                    # set the number of vector args to zero
+  4029a8:	call   402200 <sprintf@plt>       # call
+# == call to `int puts(const char *s)` ==
+  4029ad:	mov    rdi,r12                    # 1st arg: a pointer to a stack slot for the `s` arg
+  4029b0:	call   4020b0 <puts@plt>          # call
+# == call to `FILE *fopen(const char *pathname, const char *mode)` ==
+  4029b5:	mov    edi,0x40431d               # 1st arg: a pointer to the `pathname` string in the .rodata section: "../server.log"
+  4029ba:	mov    esi,0x404510               # 2nd arg: a pointer to the `mode` string in the .rodata section: "a"
+  4029bf:	call   402130 <fopen@plt>         # call
+  4029c4:	test   rax,rax                    # set ZF
+  4029c7:	je     L2                         # jump to L2 if `fopen` returned 0
+  4029c9:	mov    r14,rax                    # copy the returned FILE* to r14 for future access
+# == call to `int fprintf(FILE *stream, const char *format, ...)` ==
+  4029cc:	lea    rdx,[rbp-0x450]            # 3rd: a pointer to a stack slot for the `s` arg
+  4029d3:	mov    esi,0x40432b               # 2nd: a pointer to the `format` string arg in the .rodata section: "%s\n\n"
+  4029d8:	mov    rdi,rax                    # 1st arg: the returned FILE* from the previous function call
+  4029db:	xor    eax,eax                    # set the number of vector args to zero
+  4029dd:	call   402400 <fprintf@plt>       # call
+# == call to `void *malloc(size_t size)` ==
+  4029e2:	mov    edi,0x1000                 # 1st arg: 0x1000 = 4096
+  4029e7:	call   402120 <malloc@plt>        # call
+  4029ec:	mov    rbx,rax                    # copy the returned pointer to rbx for future access
+# == call to `void get_server_stats(char* stats_buffer, size_t stats_buf_len)` ==
+  4029ef:	mov    esi,0x1000                 # 2nd arg: 0x1000 = 4096
+  4029f4:	mov    rdi,rax                    # 1st arg: a pointer to heap allocated memory of the previous function call
+  4029f7:	call   402850 <get_server_stats>  # call
+# == call to `int fprintf(FILE *stream, const char *format, ...)` ==
+  4029fc:	mov    esi,0x40432b               # 2nd arg: a pointer to the `format` string arg in the .rodata section: "%s\n\n"
+  402a01:	mov    rdi,r14                    # 1st arg: the FILE* returned by `fopen`
+  402a04:	mov    rdx,rbx                    # 3rd arg: pointer to the allocated area returned by `malloc`
+  402a07:	xor    eax,eax                    # set the number of vector args to zero
+  402a09:	call   402400 <fprintf@plt>       # call
+# == call to `void free(void *ptr)` ==
+  402a0e:	mov    rdi,rbx                    # 1st arg: pointer to the allocated area returned by `malloc`
+  402a11:	call   402190 <free@plt>          # call
+# == call to `int fclose(FILE *stream)` ==
+  402a16:	mov    rdi,r14                    # 1st arg: the FILE* returned by `fopen`
+  402a19:	call   4023a0 <fclose@plt>        # call
+  402a1e:	jmp    L1                         # jump to L1
+L2:
+  402a20:	mov    r15d,0xffffffff            # set the function's return value to -1
+L1:
+# == epilogue ==
+  402a26:	mov    eax,r15d                   # set the return value
+  402a29:	add    rsp,0x430                  # release the stack area with all stack variables
+  402a30:	pop    rbx                        # restore the old values of the callee saved regs
+  402a31:	pop    r12
+  402a33:	pop    r14
+  402a35:	pop    r15
+  402a37:	pop    rbp                        # restore caller's base pointer
+  402a38:	ret                               # return to the caller
