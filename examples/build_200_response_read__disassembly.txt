@@ -1,0 +1,114 @@
+# objdump -ds --no-show-raw-insn -M intel --section=.text  --section=.rodata --disassemble=build_200_response_read ./server_sc1
+
+
+./server_sc1:     file format elf64-x86-64
+
+Contents of section .rodata:
+#### Limited to the relevant parts
+ ...
+ 404440 78002e00 48545450 2f312e31 20323030  x...HTTP/1.1 200
+ 404450 204f4b0d 0a436f6e 74656e74 2d547970   OK..Content-Typ
+ 404460 653a2025 730d0a43 6f6e7465 6e742d4c  e: %s..Content-L
+ 404470 656e6774 683a2025 6c750d0a 0d0a0046  ength: %lu.....F
+ 404480 696c6520 25732069 73207265 61640a00  ile %s is read..
+ 404490 48545450 2f312e31 20323030 204f4b0d  HTTP/1.1 200 OK.
+ ...
+
+Disassembly of section .text:
+### I divided the disassembly per function call to bring some structure. The control flow is relatively simple.
+
+0000000000402e20 <build_200_response_read>: # `void build_200_response_read(struct file_info* file_info, char* response_buf, size_t* response_len)`
+# == prologue & preparation ==
+  402e20:	push   rbp                        # push the caller's base pointer
+  402e21:	mov    rbp,rsp                    # set the new base pointer
+  402e24:	push   r15                        # store all used callee saved regs on the stack (r12, r13, r14, r15, rbx)
+  402e26:	push   r14
+  402e28:	push   r13
+  402e2a:	push   r12
+  402e2c:	push   rbx
+  402e2d:	sub    rsp,0x98                   # allocate space for all stack variables: 0x98 = 152 bytes
+  402e34:	mov    r14,rdx                    # copy `arg:response_len` to r14 for future access
+  402e37:	mov    r15,rsi                    # copy `arg:response_buf` to r15 for future access
+  402e3a:	mov    rbx,rdi                    # copy `arg:file_info` to rbx for future access
+# == call to `int open(const char *pathname, int flags, ...)` == 
+  402e3d:	xor    esi,esi                    # 2nd arg: 0 (= O_RDONLY access mode)
+  402e3f:	xor    eax,eax                    # set the number of vector args to variadic function to zero
+  402e41:	call   402450 <open@plt>          # call, 1st arg (rdi): `arg:file_info` pointer which points to a struct with `file_name` as first field
+  402e46:	cmp    eax,0xffffffff             # compare return value with -1, set ZF accordingly
+  402e49:	je     L1                         # jump to L1 if `open` returned -1
+  402e4f:	mov    r12d,eax                   # else: store the returned file descriptor in r12d for future access
+# == call to `char *strrchr(const char *s, int c)` == 
+  402e52:	mov    rdi,rbx                    # 1st arg: `arg:file_info` pointer
+  402e55:	mov    esi,0x2e                   # 2nd arg: 0x2e = 46 = '.'
+  402e5a:	call   402270 <strrchr@plt>       # call
+  402e5f:	test   rax,rax                    # set ZF if return value is 0
+  402e62:	mov    edi,0x404442               # a pointer to a string in the .rodata section: "."
+  402e67:	cmovne rdi,rax                    # conditional move if ZF=0; rdi either contains a pointer to the start of the file extension in `file_name`, or a pointer to "."
+# == call to `const char* ext_to_mime(const char* file_ext)` ==
+  402e6b:	inc    rdi                        # 1st arg: a pointer to the next character in the file extension string
+  402e6e:	call   4027f0 <ext_to_mime>       # call
+  402e73:	mov    QWORD PTR [rbp-0x30],r14   # store `arg:response_len` on the stack for future access (unrelated to call)
+  402e77:	mov    r13,rax                    # store the result of the call for future access
+# == call to `char *strcpy(char *dst, const char *src);` ==
+  402e7a:	lea    rdi,[rbx+0x12c]            # 1st arg: a pointer to the `mime_type` field in the `file_info` struct pointed to by `arg:file_info`
+  402e81:	mov    rsi,rax                    # 2nd arg: result of the `ext_to_mime` call
+  402e84:	call   402370 <strcpy@plt>        # call
+# == call to `int fstat (int fd, struct stat *buf)` ==
+  402e89:	lea    rsi,[rbp-0xc0]             # 2nd arg: a pointer to a stack slot for the (output) `buf` arg
+  402e90:	mov    edi,r12d                   # 1st arg: the file descriptor of the opened file
+  402e93:	call   4020f0 <fstat@plt>         # call
+  402e98:	mov    r8,QWORD PTR [rbp-0x90]    # load the `st_size` field of the `struct stat *buf` arg of the previous function call
+  402e9f:	mov    QWORD PTR [rbx+0x170],r8   # store the size in the `file_size` field of the `file_info` struct pointed to by `arg:file_info`
+# == call to `int snprintf(char str, size_t size, const char *format, ...)` ==
+  402ea6:	mov    r14d,0x800                 # 0x800 = 2048 = 2KiB (= size of the buffer pointed to by `arg:response_buf`)
+  402eac:	mov    esi,0x800                  # 2nd arg: 2KiB
+  402eb1:	mov    edx,0x404444               # 3rd arg: pointer to a string in the .rodata section: "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\n\r\n"
+  402eb6:	mov    rdi,r15                    # 1st arg: buffer pointed to by `arg:response_buf`
+  402eb9:	mov    rcx,r13                    # 4th arg: result of the `ext_to_mime` call
+  402ebc:	mov    r13,QWORD PTR [rbp-0x30]   # load `arg:response_len` (unrelated to call)
+  402ec0:	xor    eax,eax                    # set the number of vector args to variadic function to zero
+  402ec2:	call   402070 <snprintf@plt>      # call
+# == call to `size_t strlen(const char *s)` ==
+  402ec7:	mov    rdi,r15                    # 1st arg: `arg:response_buf`
+  402eca:	call   402220 <strlen@plt>        # call
+  402ecf:	mov    QWORD PTR [r13+0x0],rax    # store the resulting length in memory pointed to by `arg:response_len`
+# == call to `ssize_t read(int fd, void buf, size_t count)` ==
+  402ed3:	lea    rsi,[r15+rax*1]            # 2nd arg: a pointer to the next unused element in the buffer pointed to by `arg:response_buf`
+  402ed7:	sub    r14,rax                    # decrement the remaining buffer size
+  402eda:	mov    edi,r12d                   # 1st arg: the file descriptor for the opened file
+  402edd:	mov    rdx,r14                    # 3rd arg: the remaining buffer size
+  402ee0:	call   402130 <read@plt>          # call
+  402ee5:	cmp    rax,0xffffffffffffffff     # compare return value with -1, set ZF accordingly
+  402ee9:	je     L2                         # jump to L2 if `read` returned -1
+  402eeb:	add    QWORD PTR [r13+0x0],rax    # else: add the resulting length to the memory pointed to by `arg:response_len`
+  402eef:	jmp    L3                         # jump to L3
+L1:
+# == call to `void build_404_response(char* response_buf, size_t* response_len)` ==
+  402ef1:	mov    rdi,r15                    # 1st arg: `arg:response_buf`
+  402ef4:	mov    rsi,r14                    # 2nd arg: `arg:response_len`
+  402ef7:	call   4025f0 <build_404_response> # call
+  402efc:	jmp    L4                         # jump to L4
+L2:
+# == call to `void build_500_response(char* response_buf, size_t* response_len)` ==
+  402efe:	mov    rdi,r15                    # 1st arg: `arg:response_buf`
+  402f01:	mov    rsi,r13                    # 2nd arg: `arg:response_len`
+  402f04:	call   4026e0 <build_500_response> # call
+L3:
+# == call to `int close(int fd)` ==
+  402f09:	mov    edi,r12d                   # 1st arg: the file descriptor for the opened file
+  402f0c:	call   402080 <close@plt>         # call
+# == call to `int printf(const char *format, ...)` ==
+  402f11:	mov    edi,0x40447f               # 1st arg: a pointer to a string in the .rodata section: "File %s is read\n"
+  402f16:	mov    rsi,rbx                    # 2nd arg: `arg:file_info` with `file_name` as first field
+  402f19:	xor    eax,eax                    # set the number of vector args to variadic function to zero
+  402f1b:	call   402050 <printf@plt>        # call
+L4:
+# == epilogue == 
+  402f20:	add    rsp,0x98                   # release the stack area with all stack 
+  402f27:	pop    rbx                        # restore the old values of the callee saved regs
+  402f28:	pop    r12
+  402f2a:	pop    r13
+  402f2c:	pop    r14
+  402f2e:	pop    r15
+  402f30:	pop    rbp                        # restore caller's base pointer
+  402f31:	ret                               # return to the caller
