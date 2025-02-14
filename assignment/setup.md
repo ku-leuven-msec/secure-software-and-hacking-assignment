@@ -5,9 +5,29 @@ Running the machines in a Docker will not suffice since these containers still u
 
 For the attacker machine, download the latest prepackaged [**64-bit Debian 12** VM image](https://www.osboxes.org/debian/) for **VirtualBox(!)**.
 In VirtualBox, create a new VM called "attacker-machine" and, under "Hard Disk", select "Use an Existing Virtual Hard Disk File" to attach the disk image you just downloaded.
-Install the guest additions if you want to share the clipboard or mount shared directories (select "Devices" -> "Insert Guest Additions CD Image", go to disk directory and run `sh ./autorun.sh`, reboot).
 You have to use this VM for the lab exercises as well.
 For the project however, if you run Linux natively, you can use your host instead of the VM as the attacker machine **only if your glibc version is 2.36 or lower (not higher!)** (check with: `ldd --version`).
+
+---
+> **Note about guest additions**
+>
+> Install the guest additions if you want to share the clipboard with the host or mount shared directories.
+> The version of the guest additions has to match the version of your VirtualBox installation. 
+> Therefore, do not install the guest additions in the VM with `apt` because that version will likely be too old.
+> Instead, select "Devices" -> "Insert Guest Additions CD Image".
+> In the VM:
+> ```shell
+> $ sudo apt install linux-headers-$(uname -r) gcc perl make
+> $ cd /media/cdrom
+> $ sh ./autorun.sh
+> ```
+>
+> Now reboot.
+>
+> If you want to mount a shared directory, first create an empty directory in the VM.
+> Then in the "Shared Folders" settings menu in VirtualBox, add a new shared folder and set "Mount point" to the path of the empty directory **inside the VM** and check "Auto-mount" and "Make Permanent".
+
+---
 
 For the victim machine, download [this](https://kuleuven-my.sharepoint.com/:u:/g/personal/ruben_mechelinck_kuleuven_be/EW3zoITv8m1FubnbaVkAMDEBums8t8Ej3jwcf71Sc9L8tQ?e=RLGIDN) Debian 12 disk image and create a new VM called "victim-machine".
 This VM does not require many resources (256 MiB memory is sufficient) so you should be able to run it simultaneously with the attacker VM.
