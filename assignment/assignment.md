@@ -39,13 +39,14 @@ During lab 2 (28 Februari), every group privately gives us a concise progress up
 This could include:
     * An overview of the discovered bugs or irregularities and how you found them.
     * A description of your initial attempts to build exploits.
+Make sure to push your solution to your Gitlab repo (see repo structure below).
 
 If you cannot be present during this lab session, please contact Ruben and Alicia to arrange a different time slot.
 Your progress update will contribute to your overall grade.
 The most important part is your stack representation so make sure it is precise and contains enough details (see the example)!!
 Afterwards, we will upload the solution and an example exploit for scenario 1.
 
-During the second half of lab 3 (14 March), you can work on your project and ask questions or feedback about your exploit approaches.
+During the second half of lab 4 (28 March), you can work on your project and ask questions or feedback about your exploit approaches.
 
 ### Final Presentation & Submission
 At the end of the semester, you have to submit everything in the **`main` branch** of your given Gitlab repo.
@@ -55,6 +56,10 @@ We propose the following directory layout:
 ```shell
 ├── repo_root
 │   ├── README.md          # a file containing info about every scenario you exploited: the course operations of your exploit, which bugs you exploited, how you found them, the payload structure (if there is one) whether there are missing parts in your exploit, which shortcuts you took to get to a working exploit. You should also include clear instructions on how to launch your attack script for each scenario.
+│   ├── progress_update    # your solution for the intermediate progress update
+│   │   ├── log_header__stack.pdf
+│   │   ├── log_header__pseudo.c
+│   │   ├── log_header__disassembly.txt
 │   ├── scenario_1         # subdirectory with everything for need for scenario 1
 │   │   ├── keylogger      # the keylogger source used for this scenario. You do not have to duplicate the same source code for different scenarios. Instead, simply describe which source code you reused in the README.md file.
 │   │   │   ├── Cargo.toml
