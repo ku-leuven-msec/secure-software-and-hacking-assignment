@@ -3,33 +3,13 @@ You must run the attacker machine and remote victim machine in a Virtual Machine
 We opted to use VMs for this assignment since they provide isolation from your host machine.
 Running the machines in a Docker will not suffice since these containers still use the host's kernel and the host's `/dev`, `/sys`, `/proc`, etc. directories, into which we need to read or write to accommodate the different scenarios.
 
-For the attacker machine, download the latest prepackaged [**64-bit Debian 12** VM image](https://www.osboxes.org/debian/) for **VirtualBox(!)**.
-In VirtualBox, create a new VM called "attacker-machine" and, under "Hard Disk", select "Use an Existing Virtual Hard Disk File" to attach the disk image you just downloaded.
+For the attacker machine, download [this](https://kuleuven-my.sharepoint.com/:u:/g/personal/ruben_mechelinck_kuleuven_be/IQBbAuPZA7JGSoHiUNWeM0ITAXGv3iHw0j7kOTHIMlwkb30?e=xshy9m) Debian 13 disk image for **VirtualBox(!)** (username: osboxes, passwd: osboxes.org).
+In VirtualBox, use "New" to create a new VM called "victim-machine" and under "Specify virtual hard disk" select "Use an Existing Virtual Hard Disk File" to attach the disk image you just downloaded.
+**Note:** the download sometimes failes without error so redownload the image if you cannot boot the VM.
 You have to use this VM for the lab exercises as well.
-For the project however, if you run Linux natively, you can use your host instead of the VM as the attacker machine **only if your glibc version is 2.36 or lower (not higher!)** (check with: `ldd --version`).
+For the project however, if you run Linux natively, you can use your host instead of the VM as the attacker machine **only if your glibc version is 2.41 or lower (not higher!)** (check with: `ldd --version`).
 
----
-> **Note about guest additions**
->
-> Install the guest additions if you want to share the clipboard with the host or mount shared directories.
-> The version of the guest additions has to match the version of your VirtualBox installation. 
-> Therefore, do not install the guest additions in the VM with `apt` because that version will likely be too old.
-> Instead, select "Devices" -> "Insert Guest Additions CD Image".
-> In the VM:
-> ```shell
-> $ sudo apt install linux-headers-$(uname -r) gcc perl make
-> $ cd /media/cdrom
-> $ sh ./autorun.sh
-> ```
->
-> Now reboot.
->
-> If you want to mount a shared directory, first create an empty directory in the VM.
-> Then in the "Shared Folders" settings menu in VirtualBox, add a new shared folder and set "Mount point" to the path of the empty directory **inside the VM** and check "Auto-mount" and "Make Permanent".
-
----
-
-For the victim machine, download [this](https://kuleuven-my.sharepoint.com/:u:/g/personal/ruben_mechelinck_kuleuven_be/EW3zoITv8m1FubnbaVkAMDEBums8t8Ej3jwcf71Sc9L8tQ?e=RLGIDN) Debian 12 disk image and create a new VM called "victim-machine".
+For the victim machine, download [this](https://kuleuven-my.sharepoint.com/:u:/g/personal/ruben_mechelinck_kuleuven_be/IQA4_TNfXJT1SLJukHn_XylyAYJa0DHpp0L8wXeBguOJJyE?e=acYh0s) Debian 13 disk image.
 This VM does not require many resources (256 MiB memory is sufficient) so you should be able to run it simultaneously with the attacker VM.
 
 We advise you to use a *NAT* network adapter for both.
@@ -47,13 +27,38 @@ On the *attacker VM*, run
 $ sudo apt-get update
 $ sudo apt-get upgrade
 $ sudo apt-get dist-upgrade
+$ sudo apt install git vim libssl-dev gdb pip curl
 # Install any tool you like: vs code, terminator, etc. (see lab sessions)
 # Reboot the VM
 $ git clone https://github.com/ku-leuven-msec/secure-software-and-hacking-assignment
 $ cd secure-software-and-hacking-assignment
-# The command below installs the server files in the student home folder on the victim VM
+# The command below installs the server files in the student home folder on the **victim VM**
+# You should get "Transfer succeeded"
 $ cat server.tar.gz | ssh -p 2222 student@<HOST_IP> "extract_server -" 
 ```
+
+---
+> **Note about guest additions**
+>
+> Install the guest additions if you want to share the clipboard with the host or mount shared directories.
+> The version of the guest additions has to match the version of your VirtualBox installation. 
+> Therefore, do not install the guest additions in the VM with `apt` because that version will likely be too old.
+> Instead, select "Devices" -> "Insert Guest Additions CD Image".
+> In the VM:
+> ```shell
+> $ sudo usermod -a -G vboxsf osboxes #to access shared folders
+> $ sudo apt install linux-headers-$(uname -r) gcc perl make
+> $ sudo mount /dev/cdrom /media/cdrom
+> $ cd /media/cdrom
+> $ sh ./autorun.sh
+> ```
+>
+> Now reboot.
+>
+> If you want to mount a shared directory, first create an empty directory in the VM.
+> Then in the "Shared Folders" settings menu in VirtualBox, add a new shared folder and set "Mount point" to the path of the empty directory **inside the VM** and check "Auto-mount" and "Make Machine-Permanent".
+
+---
 
 The *victim VM* has a user `student` (password: `student`) which you can use to launch the server applications for the different scenarios.
 **Note that this user is not in the `sudo` group and, therefore, cannot change the system environment or run programs with elevated privileges!**
@@ -74,10 +79,10 @@ The program also automatically restarts the server application whenever it termi
 **You can rely on this behavior in your exploits.**
 When launched, the server changes its working directory to `/home/student/server/server_data`.
 You may assume the running server instance you attack is not widely used by other actors and runs idle most of the time.
-You can try the server by loading a web page in a browser (http://<HOST_IP>:8080/index.html)
+You can try the server by loading a web page in a browser (http://<HOST_IP>:8080/index.html).
 Have a look at the [Useful Tools section](tools_and_info.md#useful-tools) on how to use `curl` and `nc` to communicate with the server application in your exploits.
 
 **Interesting note:** notice how the file permissions of the `launch_scenario` program are `-rwsrwx--x`.
-The execute permission for the user is `s` instead of `x` which means that a regular user can execute the program with the same permissions as the file owner, i.e., root.
+The execute permission for the user is `s` instead of `x` which means that a regular user can execute the program with the same privileges as the file owner, i.e., root.
 This means you can launch this program as the root user without `sudo` and a successful exploit will grant root privileges to the keylogger.
 Linux programs like `sudo` and `passwd` work the same way.

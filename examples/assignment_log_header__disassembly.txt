@@ -98,62 +98,67 @@ Contents of section .rodata:
 
 Disassembly of section .text:
 
-0000000000402710 <log_header>:
-  402710:	push   rbp
-  402711:	mov    rbp,rsp
-  402714:	push   r15
-  402716:	push   r14
-  402718:	push   rbx
-  402719:	sub    rsp,0x828
-  402720:	mov    rbx,rdx
-  402723:	mov    r14,rdi
-  402726:	mov    DWORD PTR [rbp-0x1c],0x10
-  40272d:	mov    edi,DWORD PTR [rdx]
-  40272f:	lea    rsi,[rbp-0x40]
-  402733:	lea    rdx,[rbp-0x1c]
-  402737:	call   4022d0 <getsockname@plt>
-  40273c:	test   eax,eax
-  40273e:	jne    4027cf <log_header+0xbf>
-  402744:	lea    rsi,[rbp-0x3c]
-  402748:	lea    rdx,[rbp-0x30]
-  40274c:	mov    edi,0x2
-  402751:	mov    ecx,0x10
-  402756:	call   402430 <inet_ntop@plt>
-  40275b:	test   rax,rax
-  40275e:	je     4027cf <log_header+0xbf>
-  402760:	lea    r15,[rbp-0x840]
-  402767:	mov    edx,0x800
-  40276c:	mov    rdi,r15
-  40276f:	xor    esi,esi
-  402771:	call   402060 <memset@plt>
-  402776:	mov    ecx,DWORD PTR [rbx]
-  402778:	lea    rdx,[rbp-0x30]
-  40277c:	mov    esi,0x4042cb
-  402781:	mov    rdi,r15
-  402784:	mov    r8,r14
-  402787:	xor    eax,eax
-  402789:	call   402260 <sprintf@plt>
-  40278e:	mov    rdi,r15
-  402791:	call   4020b0 <puts@plt>
-  402796:	mov    edi,0x4042f0
-  40279b:	mov    esi,0x404550
-  4027a0:	call   402160 <fopen@plt>
-  4027a5:	test   rax,rax
-  4027a8:	je     4027cf <log_header+0xbf>
-  4027aa:	mov    r14,rax
-  4027ad:	lea    rdx,[rbp-0x840]
-  4027b4:	mov    esi,0x4042fe
-  4027b9:	mov    rdi,rax
-  4027bc:	xor    eax,eax
-  4027be:	call   402400 <fprintf@plt>
-  4027c3:	mov    rdi,r14
-  4027c6:	call   4023c0 <fclose@plt>
-  4027cb:	mov    eax,DWORD PTR [rbx]
-  4027cd:	jmp    4027d4 <log_header+0xc4>
-  4027cf:	mov    eax,0xffffffff
-  4027d4:	add    rsp,0x828
-  4027db:	pop    rbx
-  4027dc:	pop    r14
-  4027de:	pop    r15
-  4027e0:	pop    rbp
-  4027e1:	ret
+0000000000402720 <log_header>:
+  402720:	push   rbp
+  402721:	mov    rbp,rsp
+  402724:	push   r15
+  402726:	push   r14
+  402728:	push   r12
+  40272a:	push   rbx
+  40272b:	sub    rsp,0x230
+  402732:	mov    rbx,rdx
+  402735:	mov    r14,rsi
+  402738:	mov    r15,rdi
+  40273b:	mov    DWORD PTR [rbp-0x28],0x0
+  402742:	mov    DWORD PTR [rbp-0x24],0x10
+  402749:	mov    edi,DWORD PTR [rdx]
+  40274b:	lea    rsi,[rbp-0x50]
+  40274f:	lea    rdx,[rbp-0x24]
+  402753:	call   402250 <getsockname@plt>
+  402758:	test   eax,eax
+  40275a:	jne    4027ef <log_header+0xcf>
+  402760:	lea    rsi,[rbp-0x4c]
+  402764:	lea    rdx,[rbp-0x40]
+  402768:	mov    edi,0x2
+  40276d:	mov    ecx,0x10
+  402772:	call   402290 <inet_ntop@plt>
+  402777:	test   rax,rax
+  40277a:	je     4027ef <log_header+0xcf>
+  40277c:	lea    r12,[rbp-0x250]
+  402783:	mov    edx,0x200
+  402788:	mov    rdi,r12
+  40278b:	xor    esi,esi
+  40278d:	call   4021b0 <memset@plt>
+  402792:	mov    ecx,DWORD PTR [rbx]
+  402794:	lea    rdx,[rbp-0x40]
+  402798:	mov    esi,0x4042cb
+  40279d:	mov    rdi,r12
+  4027a0:	mov    r8,r15
+  4027a3:	xor    eax,eax
+  4027a5:	call   402070 <sprintf@plt>
+  4027aa:	mov    rdi,r12
+  4027ad:	call   4023a0 <puts@plt>
+  4027b2:	mov    DWORD PTR [rbp-0x28],r14d
+  4027b6:	mov    edi,0x4042f0
+  4027bb:	mov    esi,0x404550
+  4027c0:	call   402310 <fopen@plt>
+  4027c5:	test   rax,rax
+  4027c8:	je     4027ef <log_header+0xcf>
+  4027ca:	mov    r14,rax
+  4027cd:	lea    rdx,[rbp-0x250]
+  4027d4:	mov    esi,0x4042fe
+  4027d9:	mov    rdi,rax
+  4027dc:	xor    eax,eax
+  4027de:	call   402370 <fprintf@plt>
+  4027e3:	mov    rdi,r14
+  4027e6:	call   402280 <fclose@plt>
+  4027eb:	mov    eax,DWORD PTR [rbx]
+  4027ed:	jmp    4027f4 <log_header+0xd4>
+  4027ef:	mov    eax,0xffffffff
+  4027f4:	add    rsp,0x230
+  4027fb:	pop    rbx
+  4027fc:	pop    r12
+  4027fe:	pop    r14
+  402800:	pop    r15
+  402802:	pop    rbp
+  402803:	ret

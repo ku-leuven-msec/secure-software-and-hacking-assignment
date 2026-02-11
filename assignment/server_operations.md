@@ -5,16 +5,17 @@ You need to know how the server operates before you can exploit it.
 
 The vulnerable HTTP server application is written in C, runs with root privileges on a Linux host, and accepts connections on port 8080.
 We compiled the server application into x86_64 ELF binaries without debug symbols for all scenarios.
-We used clang 16.0.6 as the compiler and compiled with optimization flags that include `-O1 -fno-omit-frame-pointer -fno-inline-functions -fno-optimize-sibling-calls`.
-The remote victim machine runs a firewall that blocks all incomming and outgoing connections on any port, except for port 8080 (the server port) and port 22 (ssh).
+We used clang 19.1.7 as the compiler and compiled with optimization flags that include `-O1 -fno-omit-frame-pointer -fno-inline-functions -fno-optimize-sibling-calls`.
+The remote victim machine runs a **firewall** that blocks all incomming and outgoing connections on any port, except for port 8080 (the server port) and port 22 (ssh).
 
 ### Server Operations
-The server accepts HTTP GET, POST, and PUT requests that interact with files in the `server_data` directory:
+The server accepts HTTP GET, POST, and PUT requests which operate on files in the `server_data` directory:
 * GET sends the requested file to the client.
 * POST appends the HTTP body to the specified file.
 It returns 404 if the specified file does not exist.
 * PUT creates the specified file and fills it with the HTTP body.
 The server overwrites the file if it already exists.
+
 All file operations are restricted to the `server_data` directory.
 
 The PUT request requires authentication using [HTTP Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication).

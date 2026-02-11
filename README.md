@@ -1,6 +1,6 @@
 # Secure Software & Hacking: Course Project
 In this project, you will attack a remote HTTP server application and launch a keylogger on the remote victim machine to capture all keyboard input.
-You must analyze and reverse engineer the vulnerable server application, discover exploitable bugs, and create exploits for different server and mitigation configurations.
+You must analyze and reverse engineer the vulnerable server application, discover exploitable bugs, and create exploits for multiple **scenarios** with different server and mitigation configurations.
 Even though we intentionally inserted vulnerabilities in the server application, you will notice that you require enough knowledge about the lower levels of the software stack (see the course lectures, and the courses on Operating Systems and Intro to Computer Architecture), familiarity with some tools (see the lab sessions), and some creativity to build working exploits.
 
 You have to work in groups of two students.
@@ -29,16 +29,16 @@ Note: in a realistic attack setting, an attacker often does not have the (exact 
 
 
 ## Getting Started
-Read [the assignment](assignment/assignment.md) for more details.
+Read [the assignment](assignment/assignment.md) for more details. Here, you will find a description of the different scenarios.
 See [the setup file](assignment/setup.md) to setup the environment, [the server_operations file](assignment/server_operations.md) to learn how the vulnerable server operates, and the [tools_and_info file](assignment/tools_and_info.md) for useful info and tools to communicate with the server application.
 
 This repo's root directory contains:
 * The `assignment` directory contains all markdown files for the assignment.
-* The `keylogger` directory with a minimal working keylogger implementation.
+* The `keylogger` directory with a minimal working keylogger implementation in Rust.
 * The `examples` directory with a disassembly of the `log_header` function you should reverse engineer, along with an example for the `build_200_response_read` function.
 * The `server` directory (inside `server.tar.gz`) with:
     * The `launch_scenario` program.
-    This program will set up the scenario, start the server, and restart it whenever it crashes (more info below).
+    This program will set up the scenario, start the server, and restart it whenever it crashes (see the setup for more info).
     * The vulnerable server binaries, one for each scenario: `server_sc<SCENARIO_ID>`.
     These are the binaries you, the attacker, have access to for analysis on the attacker machine.
     The source code for the different scenarios is **almost** identical.
@@ -46,6 +46,6 @@ This repo's root directory contains:
     For scenarios 4 and 7, you also get a server binary compiled with address sanitizer (ASAN).
     * `server.h` is the header file of the server application.
     This file contains all declarations with some minor comments.
-    It also list the functions with intentional bugs so be sure to have a look at it!!
+    It also lists the functions with intentional bugs so be sure to have a look at it!!
     * The `server_data` directory containing all data files used by the server application: `home.html` and `data.txt`.
     You can assume these files are always present when the server launches.

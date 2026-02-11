@@ -1,5 +1,5 @@
 ## Assignment
-Below, you find a table that describes different scenarios. Each one presents you with a different server configuration and applied mitigations.
+Below, you find a table that describes the different scenarios. Each one presents you with a different server configuration and applied mitigations.
 Your assignment is to build one exploit per scenario for as many scenarios as possible.
 Each exploit should launch a keylogger on the remote victim machine and allow you to read the logged keyboard events.
 
@@ -13,13 +13,18 @@ Then, look for relevant pieces in the code and check if those contain any bugs.
 A scenario could be exploited in multiple ways.
 For some scenarios, we provide a version compiled with address sanitizer (ASAN).
 Be sure to use those to find bugs by constructing inputs that trigger an ASAN exception.
-The bugs you should look for are **stack buffer overwrites and overreads, uses of uninitialized memory, logic errors, format string errors and heap use-after-frees**.
+The bugs you should look for are **stack buffer overwrites and overreads, uses of uninitialized memory, logic errors, and format string errors**.
 
 We also provide a minimal working keylogger implementation written in Rust.
 You will have to tailor this implementation to the needs of your exploits.
 
+### Minor Shortcuts
 If you get stuck during the development of (a part of) an exploit for a particular scenario, we will allow you to take some **minor shortcuts** in exchange for a reduced score.
-For example, we could allow you to install the file manually if you need to create a file on the victim machine but cannot find a way to do it within your exploit.
+For example, we could allow you to:
+*  install a file manually if you need to create that file on the victim machine but cannot find a way to do it within your exploit.
+* see stdout of the vulnerable server.
+* relax some firewall rules (see [server_operations](server_operations.md) for details).
+
 You cannot, however, deactivate any of the mitigations since we do not consider this a minor shortcut.
 If you are unsure whether some action constitutes an acceptable shortcut, please contact Ruben and Alicia to discuss your plans.
 
@@ -29,7 +34,7 @@ You should read and understand the assembly code and look at the stack operation
 All stack operations are performed using register-indirect addressing with `rbp`.
 Also, have a look at [this](tools_and_info.md#structs).
 Keep an eye open for any bug you discover in this function (hint).
-We give you an example of the **`build_200_reponse_read`** function.
+We give you an example for the **`build_200_reponse_read`** function.
 You can find all required files in the `examples` directory.
 You should be able to do this assignment after the first lab session.
 
@@ -43,7 +48,7 @@ Make sure to push your solution to your Gitlab repo (see repo structure below).
 
 If you cannot be present during this lab session, please contact Ruben and Alicia to arrange a different time slot.
 Your progress update will contribute to your overall grade.
-The most important part is your stack representation so make sure it is precise and contains enough details (see the example)!!
+The most important part is your stack representation so make sure it is precise and has **the same level of detail as the example!!**
 Afterwards, we will upload the solution and an example exploit for scenario 1.
 
 During the second half of lab 4 (28 March), you can work on your project and ask questions or feedback about your exploit approaches.
@@ -55,17 +60,15 @@ We propose the following directory layout:
 
 ```shell
 ├── repo_root
-│   ├── README.md          # a file containing info about every scenario you exploited: the course operations of your exploit, which bugs you exploited, how you found them, the payload structure (if there is one) whether there are missing parts in your exploit, which shortcuts you took to get to a working exploit. You should also include clear instructions on how to launch your attack script for each scenario.
+│   ├── README.md          # a **very brief** description for every scenario you exploited: how you discovered the bugs, how you exploit them, any missing pieces or shortcuts in your exploit.
 │   ├── progress_update    # your solution for the intermediate progress update
 │   │   ├── log_header__stack.pdf
 │   │   ├── log_header__pseudo.c
 │   │   ├── log_header__disassembly.txt
-│   ├── scenario_1         # subdirectory with everything for need for scenario 1
-│   │   ├── keylogger      # the keylogger source used for this scenario. You do not have to duplicate the same source code for different scenarios. Instead, simply describe which source code you reused in the README.md file.
-│   │   │   ├── Cargo.toml
-│   │   │   └── src
-│   │   │       └── main.rs
-│   │   ├── scenario_1.py  # a script that automatically launches the attack. Make sure **you explain every step** in the script with comments: what does each command do, what does each hex string represent, etc.
+│   ├── scenario_1         # subdirectory with everything for scenario 1
+│   │   ├── keylogger      # the keylogger source for this scenario if you made changes to the given version
+│   │   │   └── ...
+│   │   ├── scenario_1.py  # a script that automatically launches the attack. Make sure **you explain every step** in the script with comments: what does each command do, the payload structure, what does each hex string represent, etc.
 │   ├── scenario_2
 │   │   └── ...
 │   └── ...
@@ -93,17 +96,17 @@ You do not have to preserve the functionality of the server application after a 
 | no. | `server_data` access¹ | stack canary | DEP² | ASLR³ | comments |
 | :-: | :-------------------: | :----------: | :--: | :---: | -------- |
 | *Basic* |
-| 1   | accessible            | no           | no   | no    | you can copy your keylogger binary directly into `server_data` and read its output there as well |
+| 1   | accessible            | no           | no   | no    | 
 | 2   | accessible            | no           | yes  | no    | no additional bugs required compared to scenario 1 |
 | 3   | not accessible        | no           | no   | no    | like scenario 1 but with two new challenges: 1. installing your executable keylogger binary on the victim machine, 2. sending output back to the attacker |
 | 4   | accessible            | no           | yes  | yes   | this requires a successful exploit for scenario 2 first |
 | *Advanced* |
-| 5   | not accessible        | no           | yes  | yes, without PIE⁴ | similar challenges to 3 but harder to overcome, TIP: bypass the authentication |
-| 6   | not accessible        | yes          | yes  | yes   | have a look at the ELF `.dynamic` section (e,g,. using `readelf`) and think about function interposition |
+| 5   | not accessible        | no           | yes  | yes, without PIE⁴ | similar challenges to scenario 3 but harder to overcome, TIP: bypass the authentication |
+| 6   | not accessible        | yes          | yes  | yes   | have a look at the ELF `.dynamic` section (e.g., using `readelf`) and think about function interposition |
 | 7   | not accessible        | no           | yes  | yes, without PIE⁴ | similar to 5 but SELinux prevents executable files in `server_data`, TIP: escape the `server_data` directory |
 
 ¹ When accessible, you can copy the keylogger binary to the `server_data` directory and read the existing files it contains, without going through the server application.
-For example, using `scp -P <PORT> path/to/keylogger student@<IP_ADDRESS>:/home/student/server/server_data`.
+For example, using `scp -P <PORT> <path/to/keylogger> student@<HOST_IP>:/home/student/server/server_data`.
 You are NOT allowed to change or overwrite any existing files.
 You still need to create an exploit for the server application to launch the keylogger.\
 ² Data Execution Prevention (aka W⊕X, aka NX).\
