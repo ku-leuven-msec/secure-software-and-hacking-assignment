@@ -38,7 +38,7 @@ We give you an example for the **`build_200_reponse_read`** function.
 You can find all required files in the `examples` directory.
 You should be able to do this assignment after the first lab session.
 
-During lab 2 (28 Februari), every group privately gives us a concise progress update where you discuss:
+During lab 2, every group privately gives us a concise progress update where you discuss:
 * Your results of the above exercise.
 * Any other progress you made.
 This could include:

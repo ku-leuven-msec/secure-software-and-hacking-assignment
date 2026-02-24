@@ -3,7 +3,7 @@ You must run the attacker machine and remote victim machine in a Virtual Machine
 We opted to use VMs for this assignment since they provide isolation from your host machine.
 Running the machines in a Docker will not suffice since these containers still use the host's kernel and the host's `/dev`, `/sys`, `/proc`, etc. directories, into which we need to read or write to accommodate the different scenarios.
 
-For the attacker machine, download [this](https://kuleuven-my.sharepoint.com/:u:/g/personal/ruben_mechelinck_kuleuven_be/IQD6lQsnXqFnS4EY-uN7EzqPAUKTcbw70gaIxhU3YAOajEA?e=KikMVG) Debian 13 disk image for **VirtualBox(!)** (username: osboxes, passwd: osboxes.org).
+For the attacker machine, download [this](https://kuleuven-my.sharepoint.com/:u:/g/personal/ruben_mechelinck_kuleuven_be/IQC_OVCrmMgwRqi-HgVpHJHdAT4sD9d2H_FqUjcyL9zK9IA?e=2x25KP) Debian 13 disk image for **VirtualBox(!)** (username: osboxes, passwd: osboxes.org).
 In VirtualBox, use "New" to create a new VM called "victim-machine" and under "Specify virtual hard disk" select "Use an Existing Virtual Hard Disk File" to attach the disk image you just downloaded.
 **Note:** the download sometimes failes without error so redownload the image if you cannot boot the VM.
 You have to use this VM for the lab exercises as well.
